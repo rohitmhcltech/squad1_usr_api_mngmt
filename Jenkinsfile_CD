@@ -7,7 +7,8 @@ pipeline {
 	registryCredential = 'ACR'
 	ACR_NAME = 'bayeracr'
 	ACR_REPO = 'bayer-usermagement'
-	IMAGE_TAG = "${env.JOB_NAME}-${env.BUILD_ID}"
+ACR_CREDENTIALS = credentials('acr-credentials')	
+IMAGE_TAG = "${env.JOB_NAME}-${env.BUILD_ID}"
 	GIT_TOKEN = credentials('github-token')
 // Replace with your Git repository URL
     }
