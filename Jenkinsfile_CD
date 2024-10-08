@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    environment {
+        DOCKER_CREDENTIALS_ID = 'dockerid' // Replace with your Docker Hub credentials ID
+        DOCKER_IMAGE = 'irohitmishra/usermanagement' // Replace with your Docker image name
+        registryUrl = 'bayeracr.azurecr.io'
+	registryCredential = 'ACR'
+	ACR_NAME = 'bayeracr'
+	ACR_REPO = 'bayer-usermagement'
+	IMAGE_TAG = "${env.JOB_NAME}-${env.BUILD_ID}"
+	ACR_CREDENTIALS = credentials('acr-credentials')
+// Replace with your Git repository URL
+    }
+    stages{    
+        stage ("Clean up Workspace"){
+            steps{
+                echo "====== Cleaning up the Workspace ======"
+                cleanWs()
+            }
+        }
+        stage ("Check out from Git Repo"){
+            steps{
+                echo "======Code Check out from the Main Branch ======"
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'gitubcredhack', url: 'git clone https://github.com/rohitmhcltech/squad1_usr_api_mngmt.git']])
+            }
+        } 
+        	stage('Login to ACR'){
+	   steps{
+		script{
+			// log in to Azur Container Registry
+		sh "echo ${ACR_CREDENTIALS} | docker login ${ACR_NAME}.azurecr.io --username ${ACR_NAME} --password-stdin"
+		}	
+	    }
+        }
+        stage('Deploy to AKS') {
+          steps {
+            withKubeConfig([credentialsId: 'AKS_k8']) {
+		sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"'
+              sh 'chmod u+x ./kubectl'
+              sh './kubectl apply -f deploymentmanifest.yaml'
+                }
+          }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
