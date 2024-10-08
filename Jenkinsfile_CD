@@ -8,7 +8,7 @@ pipeline {
 	ACR_NAME = 'bayeracr'
 	ACR_REPO = 'bayer-usermagement'
 	IMAGE_TAG = "${env.JOB_NAME}-${env.BUILD_ID}"
-	ACR_CREDENTIALS = credentials('acr-credentials')
+	GIT_TOKEN = credentials('github-token')
 // Replace with your Git repository URL
     }
     stages{    
@@ -20,11 +20,17 @@ pipeline {
         }
         stage ("Check out from Git Repo"){
             steps{
+		script{
                 echo "======Code Check out from the Main Branch ======"
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'gitubcredhack', url: 'git clone https://github.com/rohitmhcltech/squad1_usr_api_mngmt.git']])
-            }
-        } 
-        	stage('Login to ACR'){
+             //   checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'githubcredhack', url:'git clone https://github.com/rohitmhcltech/squad1_usr_api_mngmt.git']])
+           
+                    // Use the token in the URL
+                    git url: "https://${GIT_TOKEN}@github.com/rohitmhcltech/squad1_usr_api_mngmt.git", branch: 'main'
+                
+	}
+	}
+        }  
+        stage('Login to ACR'){
 	   steps{
 		script{
 			// log in to Azur Container Registry
